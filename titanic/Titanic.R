@@ -46,11 +46,13 @@ testFrame <- read.csv("test.csv")
 clean <- function(data) {
   #data <- data[, !(names(data) %in% c("PassengerId", "Name", "Ticket", "Cabin", "Age"))]
   numRelatives <- data$SibSp + data$Parch
-  data <- data[, names(data) %in% c("Survived", "Sex", "Pclass")]
+  data <- data[, names(data) %in% c("Survived", "Sex", "Pclass", "Age")]
   
   if("Survived" %in% colnames(data)) {
     data$Survived <- as.factor(data$Survived)
   }
+  
+  data$Age <- replace(data$Age, is.na(data$Age), median(data$Age, na.rm=T))
   
   data$numRelatives <- numRelatives
   data$Pclass <- as.factor(data$Pclass)
@@ -64,7 +66,7 @@ PassengerId <- testFrame$PassengerId
 testFrame <- clean(testFrame)
 testFrame$PassengerId <- PassengerId
 
-ctrl <- trainControl(method="repeatedcv", repeats=5, summaryFunction= twoClassSummary, classProbs=TRUE)
+ctrl <- trainControl(method="cv", number=10, summaryFunction= twoClassSummary, classProbs=TRUE)
 lrFit <- train(Survived ~., data=trainFrame, method="glm", metric="ROC", trControl=ctrl)
 predicted <- predict(lrFit, testFrame)
 
